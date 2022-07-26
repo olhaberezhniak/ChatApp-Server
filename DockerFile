@@ -1,0 +1,39 @@
+# Specify node version and image
+# Name Image development (can be anything)
+FROM node:16 AS development
+
+# Specify Working directory inside container
+WORKDIR /olhaberezhniak/src/server
+
+# Copy package-lock.json & package.json from host to inside container working directory
+COPY package*.json ./
+
+# Install deps inside container
+RUN npm install
+
+# Bundle App Sources
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+################
+## Production ##
+################
+
+# Build another image named production
+FROM node:14 as production
+
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+# set work dir
+WORKDIR /olhaberezhniak/src/server
+
+COPY --from=development /olhaberezhniak/src/server .
+
+EXPOSE 3000
+
+# run server
+CMD [ "node", "dist/main" ]
